@@ -1,0 +1,20 @@
+.container {
+  position: absolute;
+  top: 10%;
+  left: 10px;
+  display: flex;
+}
+
+.card {
+  flex: 0 50%;
+  width: 300px;
+}
+
+.card h2 {
+  font-size: 2rem;
+}
+
+.card p {
+  font-size: 1rem;
+}
+
