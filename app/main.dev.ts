@@ -46,7 +46,7 @@ const installExtensions = async () => {
 
   return Promise.all(
     extensions.map((name) => installer.default(installer[name], forceDownload))
-  ).catch(console.log);
+  ).catch(console.debug);
 };
 
 const createWindows = async () => {
@@ -96,6 +96,7 @@ const createWindows = async () => {
   ipcMain.setMaxListeners(Number.MAX_VALUE);
 
   ipcMain.on('message-from-worker', (_, payload) => {
+    console.debug({ payload });
     if (!mainWindow) return;
     mainWindow.webContents.send('message-from-worker', payload);
   });
@@ -105,16 +106,37 @@ const createWindows = async () => {
 
   workerWindow = new BrowserWindow({
     show: false,
-    webPreferences: { nodeIntegration: true },
+    width: 1024,
+    height: 728,
+    webPreferences: {
+      nodeIntegration: true,
+    },
   });
 
   workerWindow.loadURL(`file://${__dirname}/worker.html`);
+
+  workerWindow.webContents.on('did-finish-load', () => {
+    if (!workerWindow) {
+      throw new Error('"workerWindow" is not defined');
+    }
+    if (process.env.START_MINIMIZED) {
+      workerWindow.minimize();
+    } else {
+      workerWindow.show();
+      workerWindow.focus();
+    }
+  });
+
+  workerWindow.on('closed', () => {
+    workerWindow = null;
+  });
 
   workerWindow.on('closed', () => {
     workerWindow = null;
   });
 
   ipcMain.on('message-to-worker', (_, payload) => {
+    console.debug(payload);
     if (!workerWindow) return;
     workerWindow.webContents.send('message-to-worker', payload);
   });

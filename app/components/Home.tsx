@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import gql from 'graphql-tag';
+import { ipcRenderer } from 'electron';
 
 import styles from './Home.css';
 
@@ -35,6 +36,10 @@ const handleAddBook = (addBook) => {
   addBook({ variables: { title: Math.random().toString(36).substring(7) } });
 };
 
+ipcRenderer.on('message-from-worker', (event: any, payload: any) => {
+  console.debug({ event, payload });
+});
+
 export default function Home(): JSX.Element {
   const { data: b } = useQuery(booksGQL);
   const { data: m } = useQuery(moviesGQL);
@@ -43,6 +48,8 @@ export default function Home(): JSX.Element {
       cache.modify({
         fields: {
           books(existingBooks = []) {
+            ipcRenderer.send('message-to-worker', 'message_from_home');
+
             const newBookRef = cache.writeFragment({
               data,
               fragment: gql`
