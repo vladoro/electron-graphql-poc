@@ -1,9 +1,13 @@
-const { ApolloClient, InMemoryCache } = require('@apollo/client');
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-const uri = 'http://localhost:4000/';
+import { IpcLink } from './IpcLink';
+
+// const uri = 'http://localhost:4000/';
+
+const link = new IpcLink({});
 
 const client = new ApolloClient({
-  uri,
+  link,
   cache: new InMemoryCache(),
 });
 

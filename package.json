@@ -282,7 +282,9 @@
     "react-hot-loader": "^4.12.21",
     "react-router-dom": "^5.2.0",
     "regenerator-runtime": "^0.13.5",
-    "source-map-support": "^0.5.19"
+    "serialize-error": "^7.0.1",
+    "source-map-support": "^0.5.19",
+    "zen-observable-ts": "^0.8.21"
   },
   "devEngines": {
     "node": ">=7.x",

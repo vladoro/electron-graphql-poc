@@ -25,7 +25,7 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
-let workerWindow: BrowserWindow | null = null;
+let graphqlWorkerWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -95,16 +95,15 @@ const createWindows = async () => {
 
   ipcMain.setMaxListeners(Number.MAX_VALUE);
 
-  ipcMain.on('message-from-worker', (_, payload) => {
-    console.debug({ payload });
+  ipcMain.on('graphql-from-worker', (_, payload) => {
     if (!mainWindow) return;
-    mainWindow.webContents.send('message-from-worker', payload);
+    mainWindow.webContents.send('graphql-from-worker', payload);
   });
 
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
 
-  workerWindow = new BrowserWindow({
+  graphqlWorkerWindow = new BrowserWindow({
     show: false,
     width: 1024,
     height: 728,
@@ -113,32 +112,31 @@ const createWindows = async () => {
     },
   });
 
-  workerWindow.loadURL(`file://${__dirname}/worker.html`);
+  graphqlWorkerWindow.loadURL(`file://${__dirname}/worker.html`);
 
-  workerWindow.webContents.on('did-finish-load', () => {
-    if (!workerWindow) {
-      throw new Error('"workerWindow" is not defined');
+  graphqlWorkerWindow.webContents.on('did-finish-load', () => {
+    if (!graphqlWorkerWindow) {
+      throw new Error('"graphqlWorkerWindow" is not defined');
     }
     if (process.env.START_MINIMIZED) {
-      workerWindow.minimize();
+      graphqlWorkerWindow.minimize();
     } else {
-      workerWindow.show();
-      workerWindow.focus();
+      graphqlWorkerWindow.show();
+      graphqlWorkerWindow.focus();
     }
   });
 
-  workerWindow.on('closed', () => {
-    workerWindow = null;
+  graphqlWorkerWindow.on('closed', () => {
+    graphqlWorkerWindow = null;
   });
 
-  workerWindow.on('closed', () => {
-    workerWindow = null;
+  graphqlWorkerWindow.on('closed', () => {
+    graphqlWorkerWindow = null;
   });
 
-  ipcMain.on('message-to-worker', (_, payload) => {
-    console.debug(payload);
-    if (!workerWindow) return;
-    workerWindow.webContents.send('message-to-worker', payload);
+  ipcMain.on('graphql-to-worker', (_, payload) => {
+    if (!graphqlWorkerWindow) return;
+    graphqlWorkerWindow.webContents.send('graphql-to-worker', payload);
   });
 
   // Remove this if your app does not use auto updates
