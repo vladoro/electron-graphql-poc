@@ -42,22 +42,22 @@ export default function Home(): JSX.Element {
     update(cache, { data: { addBook: data } }) {
       console.debug({ data });
 
-      // cache.modify({
-      //   fields: {
-      //     books(existingBooks = []) {
-      //       const newBookRef = cache.writeFragment({
-      //         data,
-      //         fragment: gql`
-      //           fragment NewBook on Book {
-      //             id
-      //             title
-      //           }
-      //         `,
-      //       });
-      //       return [...existingBooks, newBookRef];
-      //     },
-      //   },
-      // });
+      cache.modify({
+        fields: {
+          books(existingBooks = []) {
+            const newBookRef = cache.writeFragment({
+              data,
+              fragment: gql`
+                fragment NewBook on Book {
+                  id
+                  title
+                }
+              `,
+            });
+            return [...existingBooks, newBookRef];
+          },
+        },
+      });
     },
   });
 
