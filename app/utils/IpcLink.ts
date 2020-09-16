@@ -10,7 +10,7 @@ export interface ApolloIpcLinkOptions {
 }
 
 export interface SerializableGraphQLRequest {
-  query: string;
+  query: any;
   variables?: Record<string, any>;
   operationName?: string;
 }
@@ -47,25 +47,25 @@ export class IpcLink extends ApolloLink {
     return new Observable(
       (observer: ZenObservable.SubscriptionObserver<FetchResult>) => {
         this.counter += 1;
-        const id = `${RANDOM_ID}-${this.counter}`;
+        const ipcId = `${RANDOM_ID}-${this.counter}`;
         const { operationName, query, variables } = operation;
         const request: SerializableGraphQLRequest = {
           operationName,
           variables,
-          query: print(query),
+          query,
         };
-        this.observers.set(id, observer);
-        this.ipc.send(`graphql-to-worker`, { id, request });
+        this.observers.set(ipcId, observer);
+        this.ipc.send(`graphql-to-worker`, { ipcId, request });
       }
     );
   }
 
   protected onResponse = (_: any, response: any) => {
-    const { id, data, error } = response;
-    const observer = this.observers.get(id);
+    const { ipcId, data, error } = response;
+    const observer = this.observers.get(ipcId);
 
     if (!observer) {
-      console.error(`Missing observer for query id ${id}.`);
+      console.error(`Missing observer for query id ${ipcId}.`);
       return;
     }
     if (data) {
@@ -74,7 +74,7 @@ export class IpcLink extends ApolloLink {
     } else if (error) {
       observer.error(deserializeError(error));
     }
-    this.observers.delete(id);
+    this.observers.delete(ipcId);
   };
 
   public dispose() {

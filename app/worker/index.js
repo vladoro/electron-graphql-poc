@@ -1,18 +1,31 @@
-// const { createHttpLink } = require('@apollo/client');
-// const { serializeError } = require('serialize-error');
+const { ApolloLink } = require('@apollo/client');
+
+const createIpcLink = require('./IpcLink');
 
 const uri = `http://localhost:4000`;
 
-const postQuery = async ({ query, variables, operationName }) =>
-  fetch(uri, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({ query, variables, operationName }),
-  })
-    .then((r) => r.json())
-    .catch((error) => ({ errors: [error.message] }));
+const httpLink = createIpcLink({ uri });
 
-module.exports = postQuery;
+const link = httpLink;
+
+const postQueryApollo = ({ ipcId, request }) => {
+  const newRequest = {
+    ...request,
+    context: { ipcId },
+  };
+  const observer = ApolloLink.execute(link, newRequest);
+
+  observer.subscribe({
+    next(x) {
+      console.log(x);
+    },
+    error(err) {
+      console.log(`Finished with error: ${err}`);
+    },
+    complete() {
+      console.log('Finished');
+    },
+  });
+};
+
+module.exports = postQueryApollo;
