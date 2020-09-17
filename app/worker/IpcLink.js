@@ -1,4 +1,6 @@
 const { ipcRenderer } = require('electron');
+const { serializeError } = require('serialize-error');
+
 const {
   ApolloLink,
   Observable,
@@ -12,6 +14,16 @@ const {
   rewriteURIForGET,
   fromError,
 } = require('@apollo/client');
+
+const sendMessageToRenderer = (ipcId, result, error) => {
+  const response = result || {};
+  if (error) {
+    response.error = serializeError(error);
+  }
+  console(response);
+  ipcRenderer.send('graphql-from-worker', { ...response, ipcId });
+  return result;
+};
 
 const createIpcLink = (linkOptions = {}) => {
   const {
@@ -45,6 +57,15 @@ const createIpcLink = (linkOptions = {}) => {
     let chosenURI = selectURI(operation, uri);
 
     const context = operation.getContext();
+
+    const { ipcId } = context;
+
+    if (!ipcId) {
+      const error = new Error('Ipc Renderer message id mising');
+      const result = fromError(error);
+      sendMessageToRenderer(null, {}, error);
+      return result;
+    }
 
     // `apollographql-client-*` headers are automatically set if a
     // `clientAwareness` object is found in the context. These headers are
@@ -103,18 +124,20 @@ const createIpcLink = (linkOptions = {}) => {
     if (options.method === 'GET') {
       const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
       if (parseError) {
-        return fromError(parseError);
+        const result = fromError(parseError);
+        sendMessageToRenderer(ipcId, {}, parseError);
+        return result;
       }
       chosenURI = newURI;
     } else {
       try {
         options.body = serializeFetchParameter(body, 'Payload');
       } catch (parseError) {
-        return fromError(parseError);
+        const result = fromError(parseError);
+        sendMessageToRenderer(ipcId, {}, parseError);
+        return result;
       }
     }
-
-    const { ipcId } = context;
 
     return new Observable((observer) => {
       if (!fetcher) return null;
@@ -129,14 +152,19 @@ const createIpcLink = (linkOptions = {}) => {
           // we have data and can send it to back up the link chain
           observer.next(result);
           observer.complete();
-          console.debug({ ...result, ipcId });
 
-          ipcRenderer.send('graphql-from-worker', { ...result, ipcId });
+          sendMessageToRenderer(ipcId, result);
           return result;
         })
         .catch((err) => {
           // fetch was cancelled so it's already been cleaned up in the unsubscribe
-          if (err.name === 'AbortError') return;
+          if (err.name === 'AbortError') {
+            sendMessageToRenderer(ipcId, {}, err);
+            return;
+          }
+
+          let result = {};
+
           // if it is a network error, BUT there is graphql result info
           // fire the next observer before calling error
           // this gives apollo-client (and react-apollo) the `graphqlErrors` and `networErrors`
@@ -171,8 +199,10 @@ const createIpcLink = (linkOptions = {}) => {
             // in the UI you want to show data where you can, errors as data where you can
             // and use correct http status codes
             observer.next(err.result);
+            result = err.result;
           }
           observer.error(err);
+          sendMessageToRenderer(ipcId, result, err);
         });
 
       return () => {
