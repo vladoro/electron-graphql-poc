@@ -40,8 +40,6 @@ export default function Home(): JSX.Element {
   const { data: m } = useQuery(moviesGQL);
   const [addBook] = useMutation(addBookGQL, {
     update(cache, { data: { addBook: data } }) {
-      console.debug({ data });
-
       cache.modify({
         fields: {
           books(existingBooks = []) {

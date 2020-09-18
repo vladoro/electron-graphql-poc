@@ -1,6 +1,5 @@
 import { ApolloLink, Observable, Operation, FetchResult } from '@apollo/client';
 import { ipcRenderer, IpcRenderer } from 'electron';
-import { print } from 'graphql';
 import { ZenObservable } from 'zen-observable-ts';
 import { deserializeError } from 'serialize-error';
 

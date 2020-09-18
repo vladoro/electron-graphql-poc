@@ -20,7 +20,6 @@ const sendMessageToRenderer = (ipcId, result, error) => {
   if (error) {
     response.error = serializeError(error);
   }
-  console(response);
   ipcRenderer.send('graphql-from-worker', { ...response, ipcId });
   return result;
 };
@@ -152,6 +151,11 @@ const createIpcLink = (linkOptions = {}) => {
           // we have data and can send it to back up the link chain
           observer.next(result);
           observer.complete();
+          const { data } = result || {};
+          if (data && data.login)
+            localStorage.setItem('access_token', data.login.accessToken);
+          if (data && data.disconnectUser)
+            localStorage.setItem('access_token', '');
 
           sendMessageToRenderer(ipcId, result);
           return result;

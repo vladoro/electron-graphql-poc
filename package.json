@@ -271,6 +271,7 @@
     "@hot-loader/react-dom": "^16.13.0",
     "@apollo/client": "^3.1.5",
     "@apollo/react-hooks": "^4.0.0",
+    "apollo-link-context": "^1.0.20",
     "electron-debug": "^3.1.0",
     "electron-log": "^4.2.2",
     "electron-updater": "^4.3.1",
