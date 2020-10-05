@@ -58,15 +58,5 @@ export default merge(baseConfig, {
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development',
     }),
-
-    new webpack.LoaderOptionsPlugin({
-      debug: true,
-      options: {
-        context: path.join(__dirname, '..', 'app'),
-        output: {
-          path: path.join(__dirname, '..', 'dll'),
-        },
-      },
-    }),
   ],
 });

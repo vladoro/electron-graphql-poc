@@ -2,8 +2,30 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Hidden Browser Window</title>
-    <script src="./worker.js"></script>
+    <title>Apollo worker</title>
   </head>
-  <body></body>
+  <body>
+    <div id="root"></div>
+    <script>
+      if (typeof process === 'object') {
+        const scripts = [];
+
+        if (process.env.START_HOT) {
+          // Dynamically insert the bundled app script in the renderer process
+          const port = process.env.PORT || 1212;
+          scripts.push(`http://localhost:${port}/dist/worker.dev.js`);
+        } else {
+          scripts.push('./dist/worker.prod.js');
+        }
+
+        if (scripts.length) {
+          document.write(
+            scripts
+              .map((script) => `<script defer src="${script}"><\/script>`)
+              .join('')
+          );
+        }
+      }
+    </script>
+  </body>
 </html>
