@@ -11,6 +11,8 @@ import webpack from 'webpack';
 import chalk from 'chalk';
 import { merge } from 'webpack-merge';
 import { spawn, execSync } from 'child_process';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+
 import baseConfig from './webpack.config.base';
 import CheckNodeEnv from '../internals/scripts/CheckNodeEnv';
 
@@ -236,6 +238,12 @@ export default merge(baseConfig, {
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development',
     }),
+
+    new BundleAnalyzerPlugin({
+      analyzerMode:
+        process.env.OPEN_ANALYZER === 'true' ? 'server' : 'disabled',
+      openAnalyzer: process.env.OPEN_ANALYZER === 'true',
+    }),
   ],
 
   node: {
@@ -248,7 +256,7 @@ export default merge(baseConfig, {
     publicPath,
     compress: true,
     noInfo: false,
-    stats: 'detailed',
+    stats: 'normal',
     inline: true,
     lazy: false,
     hot: true,
